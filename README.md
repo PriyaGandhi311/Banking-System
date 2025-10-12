@@ -11,7 +11,7 @@ This is a simple command-line banking system written in C++ that allows users to
 - **Withdraw**: Enables users to withdraw money with balance checks.
 - **Transfer**: Supports money transfers between accounts.
 
-<img src="banking-system.png" height="400", width="600"/>
+![Banking System Screenshot](banking-system.png)
 
 ## Code Structure
 
