@@ -125,3 +125,137 @@ void displayMainMenu(bool isLoggedIn) {
     }
 }
 
+void clearInputBuffer() {
+    std::cin.clear();
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+}
+
+void createAccount(AuthenticationManager& authManager, Bank& bank) {
+    if (!authManager.isLoggedIn()) {
+        std::cout << "You must be logged in to create an account.\n";
+        return;
+    }
+    
+    std::string accountName;
+    double initialBalance;
+    
+    std::cout << "Enter account name: ";
+    std::getline(std::cin, accountName);
+    
+    std::cout << "Enter initial balance: $";
+    std::cin >> initialBalance;
+    clearInputBuffer();
+    
+    if (initialBalance < 0) {
+        std::cout << "Initial balance cannot be negative.\n";
+        return;
+    }
+    
+    // Generate a simple account ID
+    static int accountCounter = 1000;
+    std::string accountId = "ACC" + std::to_string(accountCounter++);
+    
+    BankAccount newAccount(authManager.getCurrentUserId(), accountId, accountName, initialBalance);
+    bank.addAccount(newAccount);
+    
+    std::cout << "Account created successfully!\n";
+    std::cout << "Account ID: " << accountId << "\n";
+    std::cout << "Account Name: " << accountName << "\n";
+    std::cout << "Initial Balance: $" << initialBalance << "\n";
+}
+
+void deposit(Bank& bank, int userId) {
+    std::string accountId;
+    double amount;
+    
+    std::cout << "Enter account ID: ";
+    std::getline(std::cin, accountId);
+    
+    std::cout << "Enter amount to deposit: $";
+    std::cin >> amount;
+    clearInputBuffer();
+    
+    BankAccount* account = bank.findAccount(accountId);
+    if (!account) {
+        std::cout << "Account not found.\n";
+        return;
+    }
+    
+    if (account->getUserId() != userId) {
+        std::cout << "You can only deposit to your own accounts.\n";
+        return;
+    }
+    
+    if (account->deposit(amount)) {
+        bank.saveAccounts(); // Save the updated balance
+        std::cout << "Deposit successful! New balance: $" << account->getBalance() << "\n";
+    } else {
+        std::cout << "Deposit failed. Amount must be positive.\n";
+    }
+}
+
+void withdraw(Bank& bank, int userId) {
+    std::string accountId;
+    double amount;
+    
+    std::cout << "Enter account ID: ";
+    std::getline(std::cin, accountId);
+    
+    std::cout << "Enter amount to withdraw: $";
+    std::cin >> amount;
+    clearInputBuffer();
+    
+    BankAccount* account = bank.findAccount(accountId);
+    if (!account) {
+        std::cout << "Account not found.\n";
+        return;
+    }
+    
+    if (account->getUserId() != userId) {
+        std::cout << "You can only withdraw from your own accounts.\n";
+        return;
+    }
+    
+    if (account->withdraw(amount)) {
+        bank.saveAccounts(); // Save the updated balance
+        std::cout << "Withdrawal successful! New balance: $" << account->getBalance() << "\n";
+    } else {
+        std::cout << "Withdrawal failed. Insufficient funds or invalid amount.\n";
+    }
+}
+
+void checkBalance(Bank& bank, int userId) {
+    std::string accountId;
+    
+    std::cout << "Enter account ID: ";
+    std::getline(std::cin, accountId);
+    
+    BankAccount* account = bank.findAccount(accountId);
+    if (!account) {
+        std::cout << "Account not found.\n";
+        return;
+    }
+    
+    if (account->getUserId() != userId) {
+        std::cout << "You can only check balance of your own accounts.\n";
+        return;
+    }
+    
+    account->displayBalance();
+}
+
+void displayUserAccounts(Bank& bank, int userId) {
+    std::vector<BankAccount> userAccounts = bank.findAccountsByUserId(userId);
+    
+    if (userAccounts.empty()) {
+        std::cout << "No accounts found for this user.\n";
+        return;
+    }
+    
+    std::cout << "\nYour Accounts:\n";
+    std::cout << "==============\n";
+    for (const auto& account : userAccounts) {
+        account.displayBalance();
+    }
+}
+
